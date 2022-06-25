@@ -1,0 +1,15 @@
+package Model;
+
+public enum RequestType {
+    SIGN_UP,
+    CHECK_USERNAME,
+    SIGN_IN,
+    SIGN_OUT,
+    PROFILE_PHOTO,
+    SET_STATUS,
+    PRINT_FRIEND_REQUEST,
+    FRIEND_REQUEST,
+    ACCEPT_FRIEND_REQUEST,
+    DELETE_FRIEND_REQUEST,
+    PRINT_FRIENDS;
+}
