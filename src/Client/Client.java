@@ -32,6 +32,10 @@ public class Client {
             shutDown(ois, oos, socket);
         }
     }
+    private boolean ServerSettings() {
+        return true;
+    }
+
 
     public static void main(String[] args) {
         Socket socket;
@@ -58,7 +62,7 @@ public class Client {
     private Response getResponse() {
         Response response = null;
         try {
-            response = (Response) ois.readObject();
+            response = (Response) ois.readUnshared();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -68,7 +72,7 @@ public class Client {
 
     private void sendRequest(Request<?> request) {
         try {
-            oos.writeObject(request);
+            oos.writeUnshared(request);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -100,6 +104,36 @@ public class Client {
         }
     }
 
+    private void viewServers() {
+        {
+
+            Request<String> printServers = new Request<>(RequestType.PRINT_SERVERS);
+            printServers.addData("username", user.getUsername());
+            sendRequest(printServers);
+            Response response = getResponse();
+
+            System.out.print((String) response.getData());
+
+            String requestedServer = InputHandler.getString("Enter the numbered index of the server you want to enter: ");
+
+            if (requestedServer.equals("0")) {
+                return;
+            }
+
+            int menuChoice = InputHandler.getInt(" enter choice", 3);
+//            switch (menuChoice) {
+//                case "1" -> {}
+//                case "2" -> {
+//                    printList(RequestType.PRINT_FRIENDS);
+//                    String friendInvite = InputHandler.getString("Enter index of which friend you want to invite: ");
+//                    Request<String> serverInviteRequest = new Request<>(RequestType.INVITE_TO_SERVER);
+//
+//                }
+//                case "0" -> {continue userLoop;}
+//            }
+        }
+    }
+
     private boolean userLoop() {
         int menuAction;
         System.out.println(MenuHandler.userStarterMenu());
@@ -108,8 +142,8 @@ public class Client {
         switch (menuAction) {
             //case 1 -> viewServers();
             case 2 -> {
-                System.out.println("who am i ??  "  + user.getUsername());
                 printPrivateChatsUsernames();
+
                 Request<String> request = new Request<>(RequestType.PRIVATE_CHAT);
                 String username = InputHandler.getString("username: ");
                 request.addData("username", username);
@@ -117,29 +151,28 @@ public class Client {
                 // make loop for getting username
                 sendRequest(request);
                 Response response = getResponse();
+
                 if (response.getResponseStatus() == ResponseStatus.INVALID_USERNAME)
                     System.out.println("Invalid input");
                 else {
-                    //print previous chat
-                    System.out.println(response.responseStatusString() + " data: " +  response.getData());
+                    String privateChatMessages = (String) response.getData();
+                    System.out.println(privateChatMessages);
+                    
+                    PrivateChat temp = this.user.doesPrivateChatExist(username);
+                    if (temp == null)
+                        temp = new PrivateChat(this.user.getUsername(),username);
+                    this.user.setCurrentPrivateChat(temp);
 
-                    PrivateChat privateChat = (PrivateChat) response.getData();
-                    System.out.println(privateChat.getMessagesAsString());
-                    this.user.setCurrentPrivateChat(privateChat);
-
-//                                Request<Message> messageRequest = new Request<>(RequestType.SEND_MESSAGE);
-////                                messageRequest.addData("person2", username);
-
-                    listenForMessage(privateChat);
+                    listenForMessage(temp);
                     sendMessage();
                 }
             }
-            case 3 -> printFriends();
+            case 3 -> printList(RequestType.PRINT_FRIENDS);
             case 4 -> viewFriendRequests();
             case 5 -> sendFriendRequestProcess();
             case 6 -> blockFriendProcess();
             case 7 -> unblockUserProcess();
-            //case 8 -> createServer();
+            case 8 -> createServer();
             case 9 -> userSettings();
             case 0 -> {
                 sendRequest(new Request<>(RequestType.SIGN_OUT));
@@ -148,6 +181,15 @@ public class Client {
             }
         }
         return true;
+    }
+
+    private void createServer() {
+        String name = InputHandler.getString("Enter the name of your new server:");
+        if (name.equals("0"))
+            return;
+
+        Request<String> newServerRequest = new Request<>(RequestType.NEW_SERVER);
+        newServerRequest.addData("serverName", name);
     }
 
     private void userSettings() {
@@ -264,6 +306,7 @@ public class Client {
         return true;
     }
 
+
     private void sendFriendRequestProcess() {
         do {
             String receiver = InputHandler.getString("username: ");
@@ -273,7 +316,7 @@ public class Client {
     }
 
     private void blockFriendProcess() {
-        printFriends();
+        printList(RequestType.PRINT_FRIENDS);
         do {
             String blockedUsername = InputHandler.getString("username: ");
             if (blockedUsername.equals("0") || blockFriend(blockedUsername))
@@ -371,10 +414,18 @@ public class Client {
             System.out.println("invalid input");
     }
 
-    private void printFriends() {
-        Request<String> printFriends = new Request<>(RequestType.PRINT_FRIENDS);
-        printFriends.addData("username", user.getUsername());
-        sendRequest(printFriends);
+//    private void printFriends() {
+//        Request<String> printFriends = new Request<>(RequestType.PRINT_FRIENDS);
+//        printFriends.addData("username", user.getUsername());
+//        sendRequest(printFriends);
+//        Response response = getResponse();
+//        System.out.println((String) response.getData());
+//    }
+
+    private void printList(RequestType requestType) {
+        Request<String> printList = new Request<>(requestType);
+        printList.addData("username", user.getUsername());
+        sendRequest(printList);
         Response response = getResponse();
         System.out.println((String) response.getData());
     }
@@ -384,7 +435,7 @@ public class Client {
         print.addData("username", user.getUsername());
         sendRequest(print);
         Response response = getResponse();
-        if (response.getResponseStatus() == ResponseStatus.VALID_STATUS) {} else {
+        if ((response.getResponseStatus() == ResponseStatus.VALID_STATUS)) {} else {
             response = getResponse();
         }
         System.out.println(response.responseStatusString() + " data: " +  response.getData());
@@ -491,6 +542,8 @@ public class Client {
                     Response response = getResponse();
                     if (response.getResponseStatus().equals(ResponseStatus.CLOSE_THREAD)) {
                         System.out.println("Thread closed");
+                        user.setCurrentPrivateChat(null);
+                        getResponse();
                         return;
                     }
                     Message message = (Message) response.getData();

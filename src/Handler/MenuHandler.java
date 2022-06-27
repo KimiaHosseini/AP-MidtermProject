@@ -51,4 +51,22 @@ public class MenuHandler {
                 "[2] Reply to a message\n" +
                 "[3] Back";
     }
+
+    public static void serverMenu() {
+        System.out.println("" +
+                "[1] View Channels\n" +
+                "[2] Settings\n");
+    }
+
+    public static void serverAdminSettings() {
+        System.out.println("[1] Create new role\n"
+                + "[2] Manage member roles\n" +
+                "[3] Create Channel\n" +
+                "[4] DELETE SERVER");
+    }
+    public static void serverMemberSettings() {
+        System.out.println(
+                "[1] Invite Friends\n" +
+                        "[2] LEAVE SERVER\n");
+    }
 }

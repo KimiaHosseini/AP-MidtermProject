@@ -6,7 +6,7 @@ import java.io.Serializable;
 public enum Status implements Serializable {
     ONLINE,
     IDLE,
-    Do_Not_Disturb,
+    DND,
     INVISIBLE,
     OFFLINE;
 }

@@ -1,5 +1,6 @@
 package UserFeatures;
 
+import DiscordFeatures.DiscordServer;
 import DiscordFeatures.PrivateChat;
 
 import java.io.File;
@@ -24,12 +25,16 @@ public class User implements Serializable {
     private ArrayList<PrivateChat> privateChats = new ArrayList<>();
     private PrivateChat currentPrivateChat;
 
+    private ArrayList<DiscordServer> servers;
+
+
     public User(String username, String password, String email, String phoneNumber) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.status = Status.OFFLINE;
+        servers = new ArrayList<>();
     }
 
     public void setCurrentPrivateChat(PrivateChat currentPrivateChat) {
@@ -37,7 +42,7 @@ public class User implements Serializable {
     }
 
     public boolean isInThisPrivateChat(PrivateChat privateChat){
-        return privateChat == currentPrivateChat;
+        return privateChat.equals(this.currentPrivateChat);
     }
 
     public PrivateChat getCurrentPrivateChat() {
@@ -46,7 +51,9 @@ public class User implements Serializable {
 
     public boolean isInThisPrivateChat(String username){
         PrivateChat privateChat = doesPrivateChatExist(username);
-        return privateChat == currentPrivateChat;
+        if (privateChat == null)
+            return false;
+        return privateChat.equals(currentPrivateChat);
     }
 
     public void addPrivateChat(PrivateChat privateChat){
@@ -56,7 +63,7 @@ public class User implements Serializable {
     public PrivateChat doesPrivateChatExist(String username){
         for (PrivateChat privateChat : privateChats) {
             if (privateChat.getPerson2Username().equals(username) || privateChat.getPerson1Username().equals(username))
-                return privateChat;
+            return privateChat;
         }
         return null;
     }
@@ -179,7 +186,22 @@ public class User implements Serializable {
         return s;
     }
 
-//    public PrivateChat findPrivateChat(String username){
+    public String serversToString() {
+        String s = "";
+        if (servers.isEmpty())
+            return "Empty\n";
+        for (DiscordServer discordServer : servers) {
+            s = s.concat(discordServer.getName());
+        }
+
+        return s;
+    }
+
+    public void addServer(DiscordServer discordServer) { servers.add(discordServer);}
+
+
+
+    //    public PrivateChat findPrivateChat(String username){
 //        for (PrivateChat privateChat : privateChats) {
 //            if (privateChat.getPerson2Username().equals(username) )
 //        }

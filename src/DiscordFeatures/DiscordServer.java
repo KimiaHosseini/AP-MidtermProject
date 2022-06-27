@@ -4,21 +4,29 @@ import UserFeatures.User;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 public class DiscordServer {
     private String name;
-    private ArrayList<Channel> chatChannels;
-    private User owner;
+    private ArrayList<Channel> channels;
+    //private User owner;
     private HashMap<User, HashSet<Role>> members;
-    private ArrayList<Role> serverRoles;
+    //private ArrayList<Role> serverRoles;
 
     public DiscordServer(String name, User owner){
         this.name = name;
-        this.owner = owner;
-        chatChannels = new ArrayList<>();
-
+        //this.owner = owner;
+        channels = new ArrayList<>();
+        channels.add(new Channel("general"));
         members = new HashMap<>();
-        serverRoles = new ArrayList<>();
+        HashSet ownerPerms = new HashSet();
+        ownerPerms.add(Role.allPermissions());
+        members.put(owner, ownerPerms);
+        //serverRoles = new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
     }
 
     public boolean haveThisAccessibility(User user, Permissions permission){
@@ -34,6 +42,15 @@ public class DiscordServer {
     public void addMember(User user){
         members.put(user, new HashSet<>());
     }
+
+    public void allMembersToString() {
+        String s = "";
+        Set<User> users = members.keySet();
+        for (User user : users) {
+            s = s.concat(user.toStringWithStatus());
+        }
+    }
+
 
     public void giveRole(User user, Role role){
         HashSet<Role> roles = members.get(user);

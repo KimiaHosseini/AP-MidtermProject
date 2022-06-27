@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import DiscordFeatures.DiscordServer;
 import DiscordFeatures.Message;
 import DiscordFeatures.PrivateChat;
 import Handler.ResponseStatus;
@@ -22,10 +23,6 @@ public class ClientHandler implements Runnable{
     private static ArrayList<ClientHandler> clientHandlers;
     private static ArrayList<User> users;
 
-    public ObjectOutputStream getOos() {
-        return this.oos;
-    }
-
     public ClientHandler(User user){
         this.user = user;
     }
@@ -41,19 +38,41 @@ public class ClientHandler implements Runnable{
         }
     }
 
-    private void shutDown(ObjectInputStream in, ObjectOutputStream out, Socket socket) {
-        try {
-            out.close();
-            in.close();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        user.setStatus(Status.OFFLINE);
+    private User getUser() { return user; }
+
+    public ObjectOutputStream getOos() {
+        return this.oos;
     }
 
-    protected static void setUsers(ArrayList<User> users) {
-        ClientHandler.users = users;
+    protected static void setUsers(ArrayList<User> users) { ClientHandler.users = users; }
+
+    public Response getResponse(Request<?> request){
+
+        RequestType requestType = request.getRequestType();
+        Response response = null;
+
+        switch (requestType) {
+            case SEND_MESSAGE -> response = sendMessage(this.user.getCurrentPrivateChat(), (Request<Message>) request);
+            case CHECK_USERNAME ->  response = checkUsernameResponse((Request<String>) request);
+            case SIGN_UP ->  response = signUpResponse((Request<String>) request);
+            case SIGN_IN ->  response = signInResponse((Request<String>) request);
+            case SIGN_OUT -> response = signOutResponse();
+            case PROFILE_PHOTO -> profilePhotoResponse();
+            case SET_STATUS ->  response = setStatusResponse((Request<String>) request);
+            case PRINT_FRIEND_REQUEST ->  response = printFriendRequestResponse((Request<String>) request);
+            case FRIEND_REQUEST ->  response = friendRequestResponse((Request<String>) request);
+            case ACCEPT_FRIEND_REQUEST ->  response = acceptFriendRequest((Request<String>) request);
+            case DELETE_FRIEND_REQUEST ->  response = deleteFriendRequest((Request<String>) request);
+            case PRINT_FRIENDS ->  response = printFriendResponse((Request<String>) request);
+            case BLOCK_FRIEND ->  response = blockFriendResponse((Request<String>) request);
+            case PRINT_BLOCKED_FRIENDS ->  response = printBlockedUsersResponse((Request<String>) request);
+            case UNBLOCK_USER ->  response = unblockFriendResponse((Request<String>) request);
+            case PRINT_PRIVATE_CHATS_USERNAMES ->  response = printPrivateChatUsernamesResponse((Request<String>) request);
+            case PRIVATE_CHAT ->  response = privateChatResponse((Request<String>) request);
+            case PRINT_SERVERS ->  response = printServers((Request<String>)request);
+            case NEW_SERVER ->  response = createNewServer((Request<String>)request);
+        }
+        return response;
     }
 
     protected static ArrayList<User> readUsersFile() {
@@ -73,22 +92,16 @@ public class ClientHandler implements Runnable{
     }
 
     private void addClientHandler(ClientHandler ch){
-//        clientHandlers.remove(findClientHandler(ch.getUser().getUsername()));
         clientHandlers.add(ch);
         users.add(ch.getUser());
         writeUsersFile();
     }
-
     private void writeUsersFile(){
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(usersFile))){
             oos.writeObject(users);
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private User getUser() {
-        return user;
     }
 
     public User findUser(String username){
@@ -280,8 +293,11 @@ public class ClientHandler implements Runnable{
             person1.addPrivateChat(privateChat);
             person2.addPrivateChat(privateChat);
         }
+
         person1.setCurrentPrivateChat(privateChat);
-        return new Response(ResponseStatus.VALID_STATUS, privateChat);
+
+        System.out.println(privateChat.getMessagesAsString());
+        return new Response(ResponseStatus.VALID_STATUS, privateChat.getMessagesAsString());
     }
 
     @Override
@@ -292,7 +308,7 @@ public class ClientHandler implements Runnable{
             do {
 
                 try {
-                    request = (Request<?>) ois.readObject();
+                    request = (Request<?>) ois.readUnshared();
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -302,16 +318,15 @@ public class ClientHandler implements Runnable{
                 if (request.getRequestType() == RequestType.CLOSE_CHAT) {
                     response = new Response(ResponseStatus.CLOSE_THREAD);
                     try {
+                        user.setCurrentPrivateChat(null);
                         System.out.println("sent close thread message");
-                        oos.writeObject(response);
+                        oos.writeUnshared(response);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
                 if (request.getRequestType() == RequestType.SEND_MESSAGE){
                     try {
-//                        System.out.println("in run method "+ ((Message)response.getData()).getContent());
-//                        ClientHandler clientHandler = y((Request<Object>) request);
                         PrivateChat pv = this.user.getCurrentPrivateChat();
                         String username = pv.getPerson2Username();
                         if (username.equals(this.user.getUsername()))
@@ -322,7 +337,7 @@ public class ClientHandler implements Runnable{
                             break;
 
                         if (clientHandler.oos != null && clientHandler.getUser().isInThisPrivateChat(this.user.getUsername())) {
-                            clientHandler.oos.writeObject(response);
+                            clientHandler.oos.writeUnshared(response);
                         }
 //                        System.out.println("in run method" + ((Message)response.getData()).getContent());
                     } catch (IOException e) {
@@ -332,7 +347,7 @@ public class ClientHandler implements Runnable{
                 else {
                     try {
                         if (response != null)
-                            oos.writeObject(response);
+                            oos.writeUnshared(response);
                         System.out.println(response.responseStatusString() + " data: " +  response.getData());
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -342,71 +357,45 @@ public class ClientHandler implements Runnable{
             }while (true);
         }
     }
-    private PrivateChat x(Request<Object> request){
-        String person2username = (String) request.getData("person2");
-        ClientHandler person2Handler = findClientHandler(person2username);
-
-        return this.user.doesPrivateChatExist(person2username);
-    }
-
-    private ClientHandler y(Request<Object> request){
-        String person2username = (String) request.getData("person2");
-        return findClientHandler(person2username);
-    }
 
     private Response sendMessage(PrivateChat privateChat, Request<Message> request){
+
         Message message = request.getData("message");
         String messageContent = message.getContent();
         System.out.println(messageContent);
+
         if (messageContent.substring(messageContent.indexOf(":")+2).equals("0"))
             return null;
-//        System.out.println
-//                ("message printed in sendMessage CLientHandler" + message.getContent());
+
         privateChat.addMessage(message);
         return new Response(ResponseStatus.VALID_MESSAGE, message);
     }
 
-    public Response getResponse(Request<?> request){
-        RequestType requestType = request.getRequestType();
-        Response response = null;
-        switch (requestType) {
-            case SEND_MESSAGE -> {
-                response = sendMessage(this.user.getCurrentPrivateChat(), (Request<Message>) request);
-            }
-            case CHECK_USERNAME ->
-                response = checkUsernameResponse((Request<String>) request);
-            case SIGN_UP ->
-                response = signUpResponse((Request<String>) request);
-            case SIGN_IN ->
-                response = signInResponse((Request<String>) request);
-            case SIGN_OUT ->
-                response = signOutResponse();
-            case PROFILE_PHOTO ->
-                profilePhotoResponse();
-            case SET_STATUS ->
-                response = setStatusResponse((Request<String>) request);
-            case PRINT_FRIEND_REQUEST ->
-                response = printFriendRequestResponse((Request<String>) request);
-            case FRIEND_REQUEST ->
-                response = friendRequestResponse((Request<String>) request);
-            case ACCEPT_FRIEND_REQUEST ->
-                response = acceptFriendRequest((Request<String>) request);
-            case DELETE_FRIEND_REQUEST ->
-                response = deleteFriendRequest((Request<String>) request);
-            case PRINT_FRIENDS ->
-                response = printFriendResponse((Request<String>) request);
-            case BLOCK_FRIEND ->
-                response = blockFriendResponse((Request<String>) request);
-            case PRINT_BLOCKED_FRIENDS ->
-                response = printBlockedUsersResponse((Request<String>) request);
-            case UNBLOCK_USER ->
-                response = unblockFriendResponse((Request<String>) request);
-            case PRINT_PRIVATE_CHATS_USERNAMES ->
-                response = printPrivateChatUsernamesResponse((Request<String>) request);
-            case PRIVATE_CHAT ->
-                response = privateChatResponse((Request<String>) request);
+    private Response printServers(Request<String> request) {
+        String username = request.getData("username");
+        User user = findUser(username);
+        return new Response(null, user.serversToString());
+    }
+
+    private Response createNewServer(Request<String> request) {
+        String serverName = request.getData("name");
+        DiscordServer discordServer = new DiscordServer(serverName, user);
+        user.addServer(discordServer);
+        return new Response(ResponseStatus.VALID_STATUS);
+    }
+
+
+
+    private void shutDown(ObjectInputStream in, ObjectOutputStream out, Socket socket) {
+        try {
+            out.close();
+            in.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            signOutResponse();
         }
-        return response;
     }
 
 }
