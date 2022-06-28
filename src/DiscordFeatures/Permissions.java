@@ -1,12 +1,18 @@
 package DiscordFeatures;
 
-public enum Permissions {
+import java.io.Serializable;
+
+public enum Permissions implements Serializable {
     ADD_CHANNEL,
     REMOVE_CHANNEL,
     REMOVE_MEMBER,
-    CHAT_HISTORY,
-    SERVERNAME,
-    PIN,
+    VIEW_CHAT_HISTORY,
+    CHANGE_SERVER_NAME,
+    PIN_MESSAGES,
+    CHANNEL_PRIVACY,
+
     DELETE_SERVER,
+    CREATE_ROLES,
+    ASSIGN_ROLE,
 
 }

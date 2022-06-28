@@ -16,7 +16,10 @@ public class Request<T> implements Serializable {
     }
 
     public void addData(String key, T value){
-        data.put(key, value);
+        if(data.containsKey(key))
+            data.replace(key, value);
+        else
+            data.put(key, value);
     }
 
     public T getData(String key){

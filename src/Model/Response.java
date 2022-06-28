@@ -23,6 +23,10 @@ public class Response implements Serializable {
         return responseStatus;
     }
 
+    public String responseStatusString() {
+        return responseStatus.toString();
+    }
+
     public void setData(Object data) {
         this.data = data;
     }

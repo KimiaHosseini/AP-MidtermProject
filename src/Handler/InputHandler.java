@@ -6,7 +6,7 @@ import Exceptions.OutOfBoundsIndexException;
 
 public class InputHandler {
 
-    private Scanner scanner = new Scanner(System.in);
+    private static Scanner scanner = new Scanner(System.in);
 
     /**
      * When getting an int in this class, there is a menu with a select
@@ -18,7 +18,7 @@ public class InputHandler {
      * @param restriction restricting the user to a maximum they can choose from
      * @return int valid input
      */
-    public int getInt(String prompt, int restriction) {
+    public static int getInt(String prompt, int restriction) {
         boolean continueLoop = true;
         int input = 0;
         do {
@@ -27,8 +27,10 @@ public class InputHandler {
                 input = getIntFromUser(restriction);
                 continueLoop = false;
             } catch (OutOfBoundsIndexException outOfBoundsIndexException) {
+                scanner.nextLine();
                 System.out.println("The integer you entered is not an option. Please try again.");
             } catch (InputMismatchException inputMismatchException) {
+                scanner.nextLine();
                 System.out.println("You must enter an integer. Please try again.");
             }
         } while (continueLoop);
@@ -47,7 +49,7 @@ public class InputHandler {
      * @throws InputMismatchException for when a String is entered
      * @throws OutOfBoundsIndexException for when the int entered is not in the menu
      */
-    private int getIntFromUser(int indexRestriction) throws InputMismatchException, OutOfBoundsIndexException {
+    private static int getIntFromUser(int indexRestriction) throws InputMismatchException, OutOfBoundsIndexException {
         int input = 0;
         input = scanner.nextInt();
             if (input > indexRestriction)
@@ -61,7 +63,7 @@ public class InputHandler {
      * @param prompt string
      * @return string
      */
-    public String getString(String prompt) {
+    public static String getString(String prompt) {
         System.out.print(prompt);
         return scanner.nextLine();
     }
@@ -71,7 +73,7 @@ public class InputHandler {
      * @param prompt prompt printed for user input
      * @return string
      */
-    public String getParagraph(String prompt) {
+    public static String getParagraph(String prompt) {
         System.out.println(prompt);
         String body = "";
         String temp = "";
@@ -84,7 +86,7 @@ public class InputHandler {
         return body;
     }
 
-    public String getInfo(String type){
+    public static String getInfo(String type){
         String info = "";
         String regex = "";
         switch (type){
@@ -119,7 +121,7 @@ public class InputHandler {
         return null;
     }
 
-    public RequestStatus checkInfo(String s){
+    public static RequestStatus checkInfo(String s){
         if (s == null){
             System.out.println("Try again");
             return RequestStatus.INVALID;

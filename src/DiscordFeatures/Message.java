@@ -1,20 +1,23 @@
 package DiscordFeatures;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Message {
-    private String messengerUsername;
+public class Message implements Serializable {
     private String content;
     private LocalDateTime timeSent;
 
-    public Message(String messengerUsername, String content) {
-        this.messengerUsername = messengerUsername;
+    public Message(String content) {
         this.content = content;
         timeSent = LocalDateTime.now();
     }
 
+    public String getContent() {
+        return content;
+    }
+
     @Override
     public String toString() {
-        return  messengerUsername + ':' + content + '(' + timeSent + ')';
+        return content;
     }
 }
