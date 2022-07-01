@@ -1,11 +1,13 @@
 package DiscordFeatures;
 
 import DiscordFeatures.Permissions;
+import Handler.InputHandler;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 
-public class Role {
+public class Role implements Serializable {
 
     private String name;
     private HashSet<Permissions> permissions;
@@ -25,6 +27,16 @@ public class Role {
 
         return ownerRole;
     }
+
+    public static Role memberRole() {
+        Permissions arr[] = {Permissions.VIEW_CHAT_HISTORY};
+
+        HashSet memberPermissions = new HashSet(Arrays.asList(arr));
+        Role memberRole = new Role("member", memberPermissions);
+
+        return memberRole;
+    }
+
 
     public HashSet<Permissions> getPermissions() {
         return permissions;

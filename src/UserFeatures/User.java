@@ -1,5 +1,7 @@
 package UserFeatures;
 
+import DiscordFeatures.Channel;
+import DiscordFeatures.Chat;
 import DiscordFeatures.DiscordServer;
 import DiscordFeatures.PrivateChat;
 
@@ -8,7 +10,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 
 public class User implements Serializable {
     @Serial
@@ -23,8 +24,7 @@ public class User implements Serializable {
     private File pfp;
     private HashSet<User> blockedUsers = new HashSet<>();
     private ArrayList<PrivateChat> privateChats = new ArrayList<>();
-    private PrivateChat currentPrivateChat;
-
+    private Chat currentChat;
     private ArrayList<DiscordServer> servers;
 
 
@@ -37,23 +37,48 @@ public class User implements Serializable {
         servers = new ArrayList<>();
     }
 
-    public void setCurrentPrivateChat(PrivateChat currentPrivateChat) {
-        this.currentPrivateChat = currentPrivateChat;
+    public Chat getCurrentChat() {
+        return currentChat;
     }
 
-    public boolean isInThisPrivateChat(PrivateChat privateChat){
-        return privateChat.equals(this.currentPrivateChat);
+    public DiscordServer getServer(int serverIndex) {
+        return servers.get(serverIndex - 1);
     }
 
-    public PrivateChat getCurrentPrivateChat() {
-        return currentPrivateChat;
+    public void removeServer(DiscordServer server ) {
+        servers.remove(server);
     }
 
-    public boolean isInThisPrivateChat(String username){
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isInServer(DiscordServer server) {
+        if (servers.contains(server)) {
+            return true;
+        }
+        return false;
+    }
+
+
+    public void setChatToNull() {
+        currentChat = null;
+    }
+
+
+    public void setCurrentChat(Chat currentChat) {
+        this.currentChat = currentChat;
+    }
+
+    public boolean isInThisChat(Chat chat){
+        return chat.equals(this.currentChat);
+    }
+
+    public boolean isInThisChat(String username){
         PrivateChat privateChat = doesPrivateChatExist(username);
         if (privateChat == null)
             return false;
-        return privateChat.equals(currentPrivateChat);
+        return privateChat.equals(currentChat);
     }
 
     public void addPrivateChat(PrivateChat privateChat){
@@ -63,12 +88,21 @@ public class User implements Serializable {
     public PrivateChat doesPrivateChatExist(String username){
         for (PrivateChat privateChat : privateChats) {
             if (privateChat.getPerson2Username().equals(username) || privateChat.getPerson1Username().equals(username))
-            return privateChat;
+                return privateChat;
         }
         return null;
     }
     public String getUsername() {
         return username;
+    }
+
+    public User getFriend(String username) {
+        for (User user : friends) {
+            if (user.getUsername().equals(username))
+                return user;
+        }
+
+        return null;
     }
 
     public Status getStatus() {
@@ -83,7 +117,6 @@ public class User implements Serializable {
         this.status = status;
     }
     public void setPfp(File pfp) {this.pfp = pfp;}
-
 
     public boolean checkPassword(String password) {
         return this.password.equals(password);
@@ -190,8 +223,12 @@ public class User implements Serializable {
         String s = "";
         if (servers.isEmpty())
             return "Empty\n";
-        for (DiscordServer discordServer : servers) {
-            s = s.concat(discordServer.getName());
+
+        for (int i = 0; i < servers.size(); i++) {
+            if (servers.get(i) != null) {
+
+                s = s.concat("[" + (i + 1) + "]" + servers.get(i).getName() + "\n");
+            }
         }
 
         return s;

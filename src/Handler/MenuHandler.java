@@ -1,5 +1,9 @@
 package Handler;
 
+import DiscordFeatures.DiscordServer;
+import DiscordFeatures.Permissions;
+import UserFeatures.User;
+
 public class MenuHandler {
 
     public static String welcomeMenu() {
@@ -13,7 +17,7 @@ public class MenuHandler {
     public static String userStarterMenu() {
         return """
                 [1] Servers
-                [2] Private Chats //یا یکی رو انختاب کن یا یه یوزر نیم جدید بنویس
+                [2] Private Chats
                 [3] View Friends List
                 [4] View Friend Requests
                 [5] Send Friend Request
@@ -28,6 +32,7 @@ public class MenuHandler {
         return """
                 [1] Change profile photo
                 [2] Set Status
+                [3] Change Password
                 [0] Exit""";
     }
 
@@ -40,33 +45,49 @@ public class MenuHandler {
                 [0] Back""";
     }
 
-    public static String friendsListMenu() {
-        return "[1] Send DiscordFeatures.Message\n" +
-                "[2] Block friend\n "+
-                "[2] Back";
-    }
-
     public static String channelMenu() {
-        return "[1] React to a message\n" +
-                "[2] Reply to a message\n" +
-                "[3] Back";
+        return """
+                [1] React to a message
+                [2] Reply to a message
+                [3] Back""";
     }
 
     public static void serverMenu() {
-        System.out.println("" +
-                "[1] View Channels\n" +
-                "[2] Settings\n");
+        System.out.println("""
+                [1] View Channels
+                [2] Invite a friend
+                [3] Settings
+                """);
     }
 
-    public static void serverAdminSettings() {
-        System.out.println("[1] Create new role\n"
-                + "[2] Manage member roles\n" +
-                "[3] Create Channel\n" +
-                "[4] DELETE SERVER");
+    public static void serverSettings(DiscordServer server, User user) {
+        if (server.haveThisAccessibility(user, Permissions.CHANGE_SERVER_NAME)) {
+            System.out.println("[1] Change server name");
+        }
+        if (server.haveThisAccessibility(user, Permissions.PIN_MESSAGES)) {
+            System.out.println("[2] Pin Message");
+        }
+        if (server.haveThisAccessibility(user, Permissions.ADD_CHANNEL)) {
+            System.out.println("[3] Create channel");
+        }
+        if (server.haveThisAccessibility(user, Permissions.REMOVE_CHANNEL)) {
+            System.out.println("[4] Delete Channel");
+        }
+        if (server.haveThisAccessibility(user, Permissions.CHANNEL_PRIVACY)) {
+            System.out.println("[5] Modify Channel access");
+        }
+        if (server.haveThisAccessibility(user, Permissions.REMOVE_MEMBER)) {
+            System.out.println("[6] Ban member from server");
+        }
+        if (server.haveThisAccessibility(user, Permissions.CREATE_ROLES)) {
+            System.out.println("[7] Create new role");
+        }
+        if (server.haveThisAccessibility(user, Permissions.ASSIGN_ROLE)) {
+            System.out.println("[8] Assign role to member");
+        }
+        if (server.haveThisAccessibility(user, Permissions.DELETE_SERVER)) {
+            System.out.println("[9] Delete Server");
+        }
     }
-    public static void serverMemberSettings() {
-        System.out.println(
-                "[1] Invite Friends\n" +
-                        "[2] LEAVE SERVER\n");
-    }
+
 }

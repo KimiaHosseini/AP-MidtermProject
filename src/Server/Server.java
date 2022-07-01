@@ -5,53 +5,32 @@ import java.io.Serial;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Server {
-    private ServerSocket serverSocket;
+public class Server implements Runnable{
+    private final int port;
 
-    public Server(ServerSocket serverSocket){
-        this.serverSocket = serverSocket;
+    public Server(int port){
+        this.port = port;
     }
 
-    private void startServer(){
-        ClientHandler.setUsers(ClientHandler.readUsersFile());
+    @Override
+    public void run() {
+        GeneralClientHandler.setUsers(GeneralClientHandler.readUsersFile());
         try {
-            while (!serverSocket.isClosed()){
-                //wait to connect to a client
-                Socket socket = serverSocket.accept();
-                System.out.println("New user connected");
-
-                //start this client's work on a thread
-                ClientHandler clientHandler = new ClientHandler(socket);
-
-                Thread thread = new Thread(clientHandler);
+            ServerSocket serverSocket = new ServerSocket(port); //7777
+            while (true){
+                Socket clientSocket = serverSocket.accept(); //7777
+                System.out.println("new user connected");
+                Thread thread;
+                ClientHandler clientHandler;
+                if (port == 7777)
+                    clientHandler = new GeneralClientHandler(clientSocket);
+                else
+                    clientHandler = new ClientHandlerForFiles(clientSocket);
+                thread = new Thread(clientHandler);
                 thread.start();
-//                clientHandler.run();
             }
-        } catch (IOException e) {
-            closeServer();
-        }
-    }
-
-    /**
-     * close serverSocket
-     */
-    private void closeServer(){
-        try {
-            if (serverSocket != null)
-                serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * main method
-     * @param args String[]
-     * @throws IOException when can not make a serverSocket
-     */
-    public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(4444);
-        Server server = new Server(serverSocket);
-        server.startServer();
     }
 }

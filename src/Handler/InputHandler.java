@@ -114,7 +114,7 @@ public class InputHandler {
                 throw new IllegalArgumentException();
             return info;
         }catch (IllegalArgumentException e){
-            System.out.print("Invalid ");
+            System.out.println("Invalid ");
         }
         return null;
     }
