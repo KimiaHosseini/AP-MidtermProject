@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="middd:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/middd_jar</output-path>
+    <root id="archive" name="middd.jar">
+      <element id="module-output" name="middd" />
+    </root>
+  </artifact>
+</component>

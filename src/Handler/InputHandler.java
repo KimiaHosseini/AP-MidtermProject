@@ -2,11 +2,11 @@ package Handler;
 
 import java.util.InputMismatchException;
 import java.util.Scanner;
+
 import Exceptions.OutOfBoundsIndexException;
 
 public class InputHandler {
-
-    private static Scanner scanner = new Scanner(System.in);
+    private static final Scanner scanner = new Scanner(System.in);
 
     /**
      * When getting an int in this class, there is a menu with a select
@@ -14,7 +14,7 @@ public class InputHandler {
      * this, There is a parameter 'restriction' that defines a certain range
      * that the user can choose from. This method only ends if run successfully
      *
-     * @param prompt String prompt printed for the int to be entered by UserFeatures.User
+     * @param prompt      String prompt printed for the int to be entered by UserFeatures.User
      * @param restriction restricting the user to a maximum they can choose from
      * @return int valid input
      */
@@ -27,17 +27,16 @@ public class InputHandler {
                 input = getIntFromUser(restriction);
                 continueLoop = false;
             } catch (OutOfBoundsIndexException outOfBoundsIndexException) {
-                scanner.nextLine();
                 System.out.println("The integer you entered is not an option. Please try again.");
             } catch (InputMismatchException inputMismatchException) {
-                scanner.nextLine();
                 System.out.println("You must enter an integer. Please try again.");
+                scanner.nextLine();
+
             }
         } while (continueLoop);
 
         return input;
     }
-
 
     /**
      * prints a prompt and
@@ -46,20 +45,21 @@ public class InputHandler {
      *
      * @param indexRestriction int
      * @return returns the int submitted
-     * @throws InputMismatchException for when a String is entered
+     * @throws InputMismatchException    for when a String is entered
      * @throws OutOfBoundsIndexException for when the int entered is not in the menu
      */
     private static int getIntFromUser(int indexRestriction) throws InputMismatchException, OutOfBoundsIndexException {
-        int input = 0;
+        int input;
         input = scanner.nextInt();
-            if (input > indexRestriction)
-                throw new OutOfBoundsIndexException("This message is not in the choices");
+        if (input > indexRestriction)
+            throw new OutOfBoundsIndexException("This message is not in the choices");
         scanner.nextLine();
         return input;
     }
 
     /**
      * prints a prompt and returns the string entered by user
+     *
      * @param prompt string
      * @return string
      */
@@ -69,45 +69,30 @@ public class InputHandler {
     }
 
     /**
-     * gets String until # is entered
-     * @param prompt prompt printed for user input
-     * @return string
+     * Gets input from user based on specific regex of the desired type
+     *
+     * @param type type of input that is to be accepted from the user
+     * @return the user input
      */
-    public static String getParagraph(String prompt) {
-        System.out.println(prompt);
-        String body = "";
-        String temp = "";
-        do {
-            temp = scanner.nextLine();
-            if (!temp.equals("#")) {
-                body = body.concat(temp);
-            }
-        } while (!temp.equals("#"));
-        return body;
-    }
-
-    public static String getInfo(String type){
+    public static String getInfo(String type) {
         String info = "";
         String regex = "";
-        switch (type){
-            case "username":{
-                info =  getString("> Username(...): ");
+        switch (type) {
+            case "username" -> {
+                info = getString("> Enter your desired username (must be at least 6 characters): ");
                 regex = "^[a-zA-Z0-9].{5,}$";
-                break;
             }
-            case "pass":{
-                info = getString("> Password(....): ");
+            case "pass" -> {
+                info = getString("> Enter your desired password (must contain at least 1 capital letter, 1 number, and 8 characters): ");
                 regex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{8,}$";
-                break;
             }
-            case "email":{
+            case "email" -> {
                 info = getString("> Email: ");
                 regex = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
                         + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-                break;
             }
-            case "phoneNum":{
-                info = getString("> PhoneNumber(optional): ");
+            case "phoneNum" -> {
+                info = getString("> PhoneNumber (optional): ");
                 regex = "(^\\d{10,11}+$|^$|^\\s$)";
             }
         }
@@ -115,14 +100,20 @@ public class InputHandler {
             if (!info.matches(regex) && !info.equals("0"))
                 throw new IllegalArgumentException();
             return info;
-        }catch (IllegalArgumentException e){
-            System.out.print("Invalid ");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid.");
         }
         return null;
     }
 
-    public static RequestStatus checkInfo(String s){
-        if (s == null){
+    /**
+     * Checks if user input is equal to the input parameter
+     *
+     * @param s string that the user input is being compared to
+     * @return RequestStatus based on whether the input was equal to the input parameter or not
+     */
+    public static RequestStatus checkInfo(String s) {
+        if (s == null) {
             System.out.println("Try again");
             return RequestStatus.INVALID;
         }
@@ -131,4 +122,3 @@ public class InputHandler {
         return RequestStatus.VALID;
     }
 }
-
